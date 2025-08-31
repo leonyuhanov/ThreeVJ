@@ -22,7 +22,6 @@ class pixelMaper
 			this.bitmapArray.push(this.tempRow);
 		}
 	}
-	
 	drawPixel = function(x, y, pixColour)
 	{
 		if(x<this.cols && y<this.rows && x>=0 && y>=0)
@@ -32,7 +31,6 @@ class pixelMaper
 			this.bitmapArray[y][x][2] = pixColour[2];
 		}
 	}
-	
 	drawLine = function(x0, y0, x1, y1, pixelColour)
 	{
 	   var dx = Math.abs(x1-x0);
@@ -50,7 +48,6 @@ class pixelMaper
 		 if (e2 < dx){ err += dx; y0  += sy; }
 	   }
 	}
-
 	renderHLine = function(x,y,length,pixColour)
 	{
 		var xCnt = 0;
@@ -62,7 +59,6 @@ class pixelMaper
 			}
 		}
 	}
-
 	renderVLine = function(x,y,length, pixColour)
 	{
 		var yCnt = 0;
@@ -74,7 +70,6 @@ class pixelMaper
 			}
 		}
 	}
-	
 	renderRecetangle = function(x, width, y, height, pixColour)
 	{
 		this.renderHLine(x, y, width, pixColour);
@@ -82,7 +77,6 @@ class pixelMaper
 		this.renderVLine(x, y, height, pixColour);
 		this.renderVLine(x+width, y, height, pixColour);
 	}
-	
 	renderPolly = function(x, y, radius, numberOfPoints, pixColour)
 	{
 		var pointCounter;
@@ -102,7 +96,6 @@ class pixelMaper
 			this.drawLine(startPoints[0], startPoints[1], endPoints[0], endPoints[1], pixColour);
 		}
 	}
-	
 	fill = function(xStart, yStart, width, height, pixColour)
 	{
 		var xp, yp;
@@ -114,7 +107,6 @@ class pixelMaper
 			}
 		}
 	}
-	
 	drawCircle = function(cX, cY, radius, pixColour, degreePointIncrement)
 	{
 		var degCounter = 0;
@@ -125,7 +117,24 @@ class pixelMaper
 			this.drawPixel(Math.round(cPoints[0]), Math.round(cPoints[1]), pixColour);
 		}
 	}
-	
+	gradiatedPoint = function(cX, cY, peakRadius, peakColour, fadeBy)
+	{
+		var radCounter=0;
+		var tempColour = [peakColour[0], peakColour[1], peakColour[2]];
+		
+		for(radCounter=0; radCounter<peakRadius; radCounter++)
+		{
+			this.drawCircle(cX, cY, radCounter, peakColour, 1);
+		}
+		tempColour = this.singleSubtractiveFade(tempColour, fadeBy);
+		while(tempColour[0]>0 || tempColour[1]>0 || tempColour[2]>0)
+		{
+			this.drawCircle(cX, cY, radCounter, tempColour, 1);
+			radCounter++;
+			tempColour = this.singleSubtractiveFade(tempColour, fadeBy);
+		}
+		
+	}
 	getCircularPoints = function(circleX, circleY, circleR, angleFromTopLeftoRight)
 	{
 		var circCoOrds = [0, 0];
@@ -284,18 +293,22 @@ class pixelMaper
 		if(objectB3DPoints[0]>=objectA3DPoints[0] && objectB3DPoints[1]>=objectA3DPoints[1])
 		{
 			theta = 270+theta;
+			console.log("1")
 		}
 		else if(objectB3DPoints[0]>=objectA3DPoints[0] && objectB3DPoints[1]<=objectA3DPoints[1])
 		{
 			theta = 270-Math.abs(theta);
+			console.log("2")
 		}
 		else if(objectB3DPoints[0]<=objectA3DPoints[0] && objectB3DPoints[1]<=objectA3DPoints[1])
 		{
 			theta = 90+theta;
+			console.log("3")
 		}
 		else if(objectB3DPoints[0]<=objectA3DPoints[0] && objectB3DPoints[1]>=objectA3DPoints[1])
 		{
 			theta = 90+theta;
+			console.log("4")
 		}
 		theta = Math.round((theta + Number.EPSILON) * 100) / 100;
 		return theta;
@@ -309,6 +322,16 @@ class pixelMaper
 		theta = Math.atan(opp/adj)*(180/Math.PI);
 		theta = Math.round((theta + Number.EPSILON) * 100) / 100;
 		return theta;
+	}
+	getAngleFromCentre = function(toPoint)
+	{
+		return	Math.abs((Math.atan2(toPoint[0],toPoint[1])/(Math.PI/180))-180)
+	}
+	getAngleBetweenPoints = function(start, end)
+	{
+		var deltaA = end[0]-start[0], deltaB = end[1]-start[1];
+		return	Math.round((Math.abs((Math.atan2(deltaA,deltaB)/(Math.PI/180))-180) + Number.EPSILON) * 100) / 100;
+		
 	}
 	subtractiveFade = function(fadeLevel)
 	{
@@ -327,7 +350,22 @@ class pixelMaper
 			}
 		}
 	}
-	
+	singleSubtractiveFade = function(currentColour, fadeBy)
+	{
+		var bIndex=0;
+		for(bIndex=0; bIndex<currentColour.length; bIndex++)
+		{
+			if(currentColour[bIndex]-fadeBy<0)
+			{
+				currentColour[bIndex]=0;
+			}
+			else
+			{
+				currentColour[bIndex]-=fadeBy;
+			}
+		}
+		return currentColour;
+	}
 	clear = function()
 	{
 		var xCnt=0, yCnt=0;

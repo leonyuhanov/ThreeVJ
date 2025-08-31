@@ -19,7 +19,7 @@ class threeAnimationSystem
 		this.objectTapeArray = new Array();
 		this.functionList = new Array();
 		this.midiControls = new Array();
-		this.envelops = new Array();
+		this.envelopList = new Array();
 		this.lfosList = new Array();
 		this.cameraDirectors = new Array();
 		this.timersList = new Array();
@@ -33,19 +33,23 @@ class threeAnimationSystem
 		//default colour System
 		this.maxValue = 255;
 		this.maxColourDitherSteps = 128;
-		this.colourList = [this.maxValue,0,0,this.maxValue,this.maxValue,0, 0,this.maxValue,0, 0,this.maxValue,this.maxValue, 0,0,this.maxValue, this.maxValue,0,this.maxValue, this.maxValue,this.maxValue,this.maxValue];		
+		this.colourList = [this.maxValue,0,0,this.maxValue,this.maxValue,0, 0,this.maxValue,0, 0,this.maxValue,this.maxValue, 0,0,this.maxValue, this.maxValue,0,this.maxValue, this.maxValue,this.maxValue,this.maxValue];
+		
+		//Pad Addresses
+		this.padAddressList = [81,82,83,84,85,86,87,88, 71,72,73,74,75,76,77,78, 61,62,63,64,65,66,67,68, 51,52,53,54,55,56,57,58, 41,42,43,44,45,46,47,48, 31,32,33,34,35,36,37,38, 21,22,23,24,25,26,27,28, 11,12,13,14,15,16,17];
+		
 	}
 	add = function(name, duration, setupFunction, animateFunction, padAssign, padColour, lightType)
 	{
 		//set index for setup
 		this.current = this.animations.length;
 		//Insert new animation entry
-		this.animations.push(new animationEntry(name, duration, padAssign, padColour, lightType));
+		this.animations.push(new animationEntry(name, duration, this.padAddressList[padAssign], padColour, lightType));
 		this.scenes.push(new THREE.Scene());
 		this.lighting.push(new Array());
 		this.objectTapeArray.push(new Array());
 		this.midiControls.push(new MIDIMapper());
-		this.envelops.push(new envelopGenerator());
+		this.envelopList.push(new envelopGenerator());
 		this.lfosList.push(new ElipticalEnvelopGenerator());
 		this.cameraDirectors.push(new CameraSequencer());
 		this.timersList.push(new timerObject());
@@ -148,7 +152,6 @@ class threeAnimationSystem
 		this.current = index%this.animations.length;
 		//set timeout timer for current
 		this.animations[this.current].timer.startTimer("duration", this.animations[this.current].duration*1000);
-		//restore previoulsy saved view port
 		camera.position.set(this.orbitalControlsArray[this.current][0][0], this.orbitalControlsArray[this.current][0][1], this.orbitalControlsArray[this.current][0][2]);
 		camera.fov = this.getGlobalVar("cameraFOV");
 		camera.updateProjectionMatrix();
@@ -192,7 +195,7 @@ class threeAnimationSystem
 	}
 	envelops = function()
 	{
-		return this.envelops[this.current];
+		return this.envelopList[this.current];
 	}
 	lfos = function()
 	{

@@ -24,8 +24,10 @@ class threeParticles
 		this.geometry = new Array();
 		this.object = new Array();
 		this.envelops = new envelopGenerator();
+		this.sprite = new THREE.TextureLoader().load( './BoilerPlate/disc.png' );
 		//default
 		this.defaultAxis = 1;
+		this.globalBloom = 0;
 	}
 	init = function(numberOfParticles, centreLocation, particleSize, maxDecayDistance, motionRange, axisRange, angleRange, type)
 	{
@@ -89,7 +91,7 @@ class threeParticles
 		}
 		this.geometry.push( new THREE.BufferGeometry() );
 		this.geometry[0].setAttribute( 'position', new THREE.Float32BufferAttribute( vertices , 3 ) );
-		this.material.push( new THREE.PointsMaterial( { color: 0xffffff, size: this.particleSize} ) );
+		this.material.push( new THREE.PointsMaterial( { color: 0xffffff, size: this.particleSize, map: this.sprite, transparent: true} ) );
 		this.object.push( new THREE.Points( this.geometry[0], this.material[0] ) );
 		this.envelops.addWithTimeCode("pointCloudEnvelop", [100,0], [200,100], 1, Math.random()*300);
 	}
@@ -120,7 +122,7 @@ class threeParticles
 			vertices.push(pointLocation[0], pointLocation[1], pointLocation[2]);
 			this.geometry.push( new THREE.BufferGeometry() );
 			this.geometry[this.particleCounter].setAttribute( 'position', new THREE.Float32BufferAttribute( vertices , 3 ) );
-			this.material.push( new THREE.PointsMaterial( { color: 0xffffff, size: this.particleSize} ) );
+			this.material.push( new THREE.PointsMaterial( { color: 0xffffff, size: this.particleSize, map: this.sprite, transparent: true} ) );
 			this.object.push( new THREE.Points( this.geometry[this.particleCounter], this.material[this.particleCounter] ) );
 		}	
 		this.envelops.addWithTimeCode("pointObjectEnvelop", [100,0], [200,100], 1, Math.random()*300);
@@ -129,6 +131,10 @@ class threeParticles
 	{
 		if(type=="pointcloud")
 		{
+			if(this.globalBloom==1)
+			{
+				this.object[0].layers.enable( 1 );
+			}
 			scene.add(this.object[0]);
 		}
 		else if(type=="pointobject")
@@ -275,6 +281,7 @@ class threeParticles
 			vertices.push(particlePosition[0], particlePosition[1], particlePosition[2])
 		}
 		//set up new point cloud
+		this.geometry[0].dispose();
 		this.geometry[0].setAttribute( 'position', new THREE.Float32BufferAttribute( vertices , 3 ) );
 		//Colour for entire point cloud
 		colourObject.getColour(colourIndex%colourObject._bandWidth);
@@ -324,6 +331,7 @@ class threeParticles
 			vertices.push(particlePosition[0], particlePosition[1], particlePosition[2])
 		}
 		//set up new point cloud
+		this.geometry[0].dispose();
 		this.geometry[0].setAttribute( 'position', new THREE.Float32BufferAttribute( vertices , 3 ) );
 		//Colour for entire point cloud
 		colourObject.getColour(colourIndex%colourObject._bandWidth);
@@ -376,6 +384,7 @@ class threeParticles
 			vertices.push(particlePosition[0], particlePosition[1], particlePosition[2])
 		}
 		//set up new point cloud
+		this.geometry[0].dispose();
 		this.geometry[0].setAttribute( 'position', new THREE.Float32BufferAttribute( vertices , 3 ) );
 		//Colour for entire point cloud
 		colourObject.getColour(colourIndex%colourObject._bandWidth);

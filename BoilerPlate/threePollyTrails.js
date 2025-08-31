@@ -96,6 +96,7 @@ class threePollyTrails
 			vectorPoints = this.pixelMap.getElipticalPointsRaw(0, 0, tempRadius, tempRadius, this.startAngle);
 			verticies.push( new THREE.Vector3(vectorPoints[0], vectorPoints[1], 0) );
 			this.objectTape[localObjectCounter].shape[0].lineTo(vectorPoints[0], vectorPoints[1]);
+			this.objectTape[localObjectCounter].geometry[0].dispose();
 			this.objectTape[localObjectCounter].geometry[0].setFromPoints( verticies );
 			//animate trails
 			for(localTrailCounter=0; localTrailCounter<this.objectTape[localObjectCounter].subPollyPoints; localTrailCounter++)
@@ -121,6 +122,7 @@ class threePollyTrails
 					vectorPoints = this.objectTape[localObjectCounter].shape[0].getPoint((tempLocationInDegrees+this.objectTape[localObjectCounter].motionIncrements[0])%1);
 					verticies.push(vectorPoints.x+tempPointRadius[0], vectorPoints.y+tempPointRadius[1], tempPointRadius[2]);
 				}
+				this.objectTape[localObjectCounter].geometry[localTrailCounter+1].dispose();
 				this.objectTape[localObjectCounter].geometry[localTrailCounter+1].setAttribute( 'position', new THREE.Float32BufferAttribute( verticies , 3 ) );
 				//colour
 				this.colourObject.getColour(this.subColourIndex%this.colourObject._bandWidth);

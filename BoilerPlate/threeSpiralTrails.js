@@ -80,6 +80,7 @@ class threeSpiralTrails
 				vectorPoints = new THREE.Vector3(this.objectTape[localObjectCounter].position[0]+pointPos[1], pointPos[0], (localZstart)+zIndex);
 				this.objectTape[localObjectCounter].shape.push(vectorPoints);
 			}
+			this.objectTape[localObjectCounter].geometry[0].dispose();
 			this.objectTape[localObjectCounter].geometry[0].setFromPoints( this.objectTape[localObjectCounter].shape );
 			//colour
 			this.colourObject.getColour(this.subColourIndex%this.colourObject._bandWidth);

@@ -141,6 +141,14 @@ class ElipticalEnvelopGenerator
 		}
 		return -1;
 	}
+	isHalfWay = function(envelopName)
+	{
+		if( this.getTimeCode(envelopName)>=(this.getTotalRunTime(envelopName)/2) )
+		{
+			return 1;
+		}
+		return 0;
+	}
 	setOneShotState = function(envelopName, state, timeIndex)
 	{
 		this.currentIndex = this.getEnvelopIndex(envelopName);

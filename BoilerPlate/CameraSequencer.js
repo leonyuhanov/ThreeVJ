@@ -9,6 +9,10 @@ class CameraSequencer
 		this.currentFrame = 0;
 		this.completed = 0;
 		this.positionalCutOff = 0.0001;
+		this.cameraPathCurve;
+		this.pathFiness = 720;
+		this.cameraPosition = new THREE.Vector3(0,0,0);
+		
 	}
 	addPoints = function(point_Vector3)
 	{
@@ -22,6 +26,21 @@ class CameraSequencer
 	{
 		this.keyFrames = new Array();
 	}
+	/*
+	go = function(camera)
+	{
+		this.cameraPosition = this.cameraPathCurve.getPointAt( (this.currentFrame/this.pathFiness)%1 );
+		camera.position.set(this.cameraPosition.x, this.cameraPosition.y, this.cameraPosition.z);
+		this.currentFrame += this.motionSpeed[0];
+		if(this.currentFrame>=this.pathFiness)
+		{
+			this.completed=1;
+		}
+		//camPosition = animSys.getGlobalVar("cameraCurve").getPointAt( ((currentCameraIndex+1)/animSys.getGlobalVar("cameraFiness"))%1 );
+		//controls.target = camPosition;
+		//camera.up = new THREE.Vector3(0,0,1);
+	}
+	*/
 	go = function(camera)
 	{
 		if(this.completed==1)
@@ -212,6 +231,12 @@ class CameraSequencer
 			tempRecord = importList[pointCounter].split(",");
 			this.addPoints( new THREE.Vector3(tempRecord[0], tempRecord[1], tempRecord[2]) );
 		}
+		/*
+		//create curve path
+		this.addPoints(this.keyFrames[0]);
+		this.cameraPathCurve = new THREE.CatmullRomCurve3( this.keyFrames );
+		console.log(this.cameraPathCurve);
+		*/
 	}
 }
 

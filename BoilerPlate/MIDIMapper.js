@@ -1,5 +1,23 @@
 //Note ON events are  0[144+MIDI CHANEL-1] 1[KEY ID] 2[VELOCITY]
 //Note OFF events are 0[128+MIDI CHANEL-1] 1[KEY ID] 2[VELOCITY] 
+/*
+Colour values for Launch Controll XL Rotaries + Buttons
+Hex		Decimal 	Colour 		Brightness
+0Ch 	12 			Off 		Off
+0Dh 	13 			Red 		Low
+0Fh 	15 			Red 		Full
+1Dh 	29 			Amber 		Low
+3Fh 	63 			Amber 		Full
+3Eh 	62 			Yellow 		Full
+1Ch 	28 			Green 		Low
+3Ch 	60 			Green 		Full
+Flashing
+Hex 	Decimal 	Colour 		Brightness
+0Bh 	11 			Red 		Full
+3Bh 	59 			Amber 		Full
+3Ah 	58 			Yellow 		Full
+38h 	56 			Green 		Full
+*/
 class MIDIMapper
 {	
 	constructor()
@@ -13,6 +31,8 @@ class MIDIMapper
 		this.midiKeyRange = [48,84];
 		this.midiNoteArray = [[21,'A',0],[22,'A#',0],[23,'B',0],[24,'C',1],[25,'C#',1],[26,'D',1],[27,'D#',1],[28,'E',1],[29,'F',1],[30,'F#',1],[31,'G',1],[32,'G#',1],[33,'A',1],[34,'A#',1],[35,'B',1],[36,'C',2],[37,'C#',2],[38,'D',2],[39,'D#',2],[40,'E',2],[41,'F',2],[42,'F#',2],[43,'G',2],[44,'G#',2],[45,'A',2],[46,'A#',2],[47,'B',2],[48,'C',3],[49,'C#',3],[50,'D',3],[51,'D#',3],[52,'E',3],[53,'F',3],[54,'F#',3],[55,'G',3],[56,'G#',3],[57,'A',3],[58,'A#',3],[59,'B',3],[60,'C',4],[61,'C#',4],[62,'D',4],[63,'D#',4],[64,'E',4],[65,'F',4],[66,'F#',4],[67,'G',4],[68,'G#',4],[69,'A',4],[70,'A#',4],[71,'B',4],[72,'C',5],[73,'C#',5],[74,'D',5],[75,'D#',5],[76,'E',5],[77,'F',5],[78,'F#',5],[79,'G',5],[80,'G#',5],[81,'A',5],[82,'A#',5],[83,'B',5],[84,'C',6],[85,'C#',6],[86,'D',6],[87,'D#',6],[88,'E',6],[89,'F',6],[90,'F#',6],[91,'G',6],[92,'G#',6],[93,'A',6],[94,'A#',6],[95,'B',6],[96,'C',7],[97,'C#',7],[98,'D',7],[99,'D#',7],[100,'E',7],[101,'F',7],[102,'F#',7],[103,'G',7],[104,'G#',7],[105,'A',7],[106,'A#',7],[107,'B',7],[108,'C',8]];
 		this.chordOffests = [[0,4,9,12],[0,5,9,12]];
+		this.colourIndex = [ ['red', 15], ['amber', 63], ['yellow', 62], ['green', 60], ['redflash', 11], ['amberflash', 59], ['yellowflash', 58], ['greenflash', 56] ]; 
+		this.defaultColour = 'green';
 		this.keyCounter = 0;
 		
 		//custom lighting & control for the Novation Launchpad x
@@ -25,26 +45,45 @@ class MIDIMapper
 		this.defaultBookMarkColour = 37;
 		this.wsHUD;
 		this.webSocketConnected=0;
-
 	}
-	addItem =  function(MIDIChan, CCID, controlName, scaleToValue, scaleFromValue=0)
+	addItem =  function(MIDIChan, CCID, controlName, scaleToValue, scaleFromValue=0, defaultColour=this.defaultColour)
 	{
-		this.midiMapArray.push([MIDIChan, CCID, controlName, 0, 0, scaleToValue, new Array(), 0, 0, scaleFromValue])
+		this.midiMapArray.push([MIDIChan, CCID, controlName, 0, 0, scaleToValue, new Array(), 0, 0, scaleFromValue, null, [], defaultColour])
 		this.numberOfItems = this.midiMapArray.length;
 	}
-	addItem =  function(MIDIChan, CCID, controlName, scaleToValue, initialValue, scaleFromValue=0)
+	addItem =  function(MIDIChan, CCID, controlName, scaleToValue, initialValue, scaleFromValue=0, defaultColour=this.defaultColour)
 	{
-		this.midiMapArray.push([MIDIChan, CCID, controlName, 0, 0, scaleToValue, new Array(), 0, 0, scaleFromValue])
+		this.midiMapArray.push([MIDIChan, CCID, controlName, 0, 0, scaleToValue, new Array(), 0, 0, scaleFromValue, null, [], defaultColour])
+		this.numberOfItems = this.midiMapArray.length;
+		this.setValue(controlName, initialValue);
+		this.setChangedState(controlName, 0);
+	}
+	addItemKEY =  function(MIDIChan, CCID, controlName, scaleToValue, initialValue, defaultColour=this.defaultColour)
+	{
+		this.midiMapArray.push([MIDIChan, CCID, controlName, 0, 0, scaleToValue, new Array(), 0, 1, 0, null, [], defaultColour])
 		this.numberOfItems = this.midiMapArray.length;
 		this.setValue(controlName, initialValue);
 		this.setChangedState(controlName, 0);
 	}
-	addItemKEY =  function(MIDIChan, CCID, controlName, scaleToValue, initialValue)
+	addItem_callBack =  function(MIDIChan, CCID, controlName, scaleToValue, initialValue, callBackFunction, callBackArgs, scaleFromValue=0, defaultColour=this.defaultColour)
 	{
-		this.midiMapArray.push([MIDIChan, CCID, controlName, 0, 0, scaleToValue, new Array(), 0, 1, 0])
+		this.midiMapArray.push([MIDIChan, CCID, controlName, 0, 0, scaleToValue, new Array(), 0, 0, scaleFromValue, new callBackFuncWrapper(callBackFunction), callBackArgs, defaultColour])
 		this.numberOfItems = this.midiMapArray.length;
 		this.setValue(controlName, initialValue);
 		this.setChangedState(controlName, 0);
+	}
+	changeColour = function(controlName, colour)
+	{
+		if(this.findColour(colour)!=-1)
+		{
+			for(this.innerCounter=0; this.innerCounter<this.numberOfItems; this.innerCounter++)
+			{
+				if(this.midiMapArray[this.innerCounter][2]==controlName)
+				{
+					this.midiMapArray[this.innerCounter][12] = colour;
+				}
+			}
+		}
 	}
 	deleteItem = function(controlName)
 	{
@@ -102,11 +141,12 @@ class MIDIMapper
 	}
 	hasChanged = function(controlName)
 	{
-		for(this.innerCounter=0; this.innerCounter<this.numberOfItems; this.innerCounter++)
+		var cCounter=0;
+		for(cCounter=0; cCounter<this.numberOfItems; cCounter++)
 		{
-			if(this.midiMapArray[this.innerCounter][2]==controlName)
+			if(this.midiMapArray[cCounter][2]==controlName)
 			{
-				if(this.midiMapArray[this.innerCounter][7]==1)
+				if(this.midiMapArray[cCounter][7]==1)
 				{
 					return 1;
 				}
@@ -177,6 +217,16 @@ class MIDIMapper
 			}
 		}
 	}
+	getCallBack = function(controlName)
+	{
+		for(this.innerCounter=0; this.innerCounter<this.numberOfItems; this.innerCounter++)
+		{
+			if(this.midiMapArray[this.innerCounter][2]==controlName)
+			{
+				return [this.midiMapArray[this.innerCounter][10], this.midiMapArray[this.innerCounter][11]];
+			}
+		}
+	}
 	getValue = function(controlName)
 	{
 		for(this.innerCounter=0; this.innerCounter<this.numberOfItems; this.innerCounter++)
@@ -198,27 +248,25 @@ class MIDIMapper
 			}
 		}
 	}
-	getValueFromCCID = function(CCID, changeFlag)
+	getValueFromCCID = function(CCID, changeFlag=0)
 	{
-		if(changeFlag==null){changeFlag=0;}
 		for(this.innerCounter=0; this.innerCounter<this.numberOfItems; this.innerCounter++)
 		{
 			if(this.midiMapArray[this.innerCounter][1]==CCID)
 			{
-				this.midiMapArray[this.innerCounter][7] = changeFlag;
+				//this.midiMapArray[this.innerCounter][7] = changeFlag;
 				return this.midiMapArray[this.innerCounter][4];
 			}
 		}
 		return null;
 	}
-	getValueFromCCID = function(MIDIChanel, CCID, changeFlag)
+	getValueFromCCID = function(MIDIChanel, CCID, changeFlag=0)
 	{
-		if(changeFlag==null){changeFlag=0;}
 		for(this.innerCounter=0; this.innerCounter<this.numberOfItems; this.innerCounter++)
 		{
 			if(this.midiMapArray[this.innerCounter][0]==MIDIChanel && this.midiMapArray[this.innerCounter][1]==CCID)
 			{
-				this.midiMapArray[this.innerCounter][7] = changeFlag;
+				//this.midiMapArray[this.innerCounter][7] = changeFlag;
 				return this.midiMapArray[this.innerCounter][4];
 			}
 		}
@@ -361,6 +409,27 @@ class MIDIMapper
 	{
 		return (60000/bpm);
 	}
+	getItemColour = function(controlName)
+	{
+		for(this.innerCounter=0; this.innerCounter<this.numberOfItems; this.innerCounter++)
+		{
+			if(this.midiMapArray[this.innerCounter][2]==controlName)
+			{
+				return this.findColour(this.midiMapArray[this.innerCounter][12]);
+			}
+		}
+	}
+	findColour = function(colour)
+	{
+		for(this.innerCounter=0; this.innerCounter<this.colourIndex.length; this.innerCounter++)
+		{
+			if(this.colourIndex[this.innerCounter][0]==colour)
+			{
+				return this.colourIndex[this.innerCounter][1];
+			}
+		}
+		return -1;
+	}
 	sendSysEx = function(midiOutput, padAddressList, colourList, lightTypeList)
 	{
 		var ledMatrixSysExMessage = [240, 0, 32, 41, 2, 12, 3];
@@ -468,6 +537,13 @@ class MIDIMapper
 			}
 		}
 		this.wsHUD.send("UIUPDATE:"+wsDataToSend);
+	}
+}
+class callBackFuncWrapper
+{
+	constructor(callBackF)
+	{
+		this.callBack = callBackF;
 	}
 }
 export default MIDIMapper;

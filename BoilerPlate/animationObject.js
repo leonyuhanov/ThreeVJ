@@ -12,6 +12,7 @@ class animationObject
 		this.objects = new Array();
 		this.shape = new Array();
 		this.extrude = new Array();
+		this.pointData = new Array();
 		this.axis = 0;
 		this.axisOffset = 0;
 		this.radius = 0;
